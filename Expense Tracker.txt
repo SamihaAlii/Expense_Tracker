@@ -1,0 +1,129 @@
+import tkinter as tk
+from tkinter import messagebox
+import mysql.connector
+import matplotlib.pyplot as plt
+
+# MySQL database connection settings
+username = 'your_username'
+password = 'your_password'
+host = 'your_host'
+database = 'your_database'
+
+# Connect to MySQL database
+cnx = mysql.connector.connect(
+    user=username,
+    password=password,
+    host=host,
+    database=database
+)
+
+# Create a cursor object
+cursor = cnx.cursor()
+
+# Create a Tkinter window
+window = tk.Tk()
+window.title("Expense Tracker")
+
+# Set up the GUI layout
+main_frame = tk.Frame(window, bg="white")
+main_frame.pack(fill="both", expand=True)
+
+# Create a header frame
+header_frame = tk.Frame(main_frame, bg="blue")
+header_frame.pack(fill="x")
+
+# Add a logo image to the header frame
+logo_image = tk.PhotoImage(file="logo.png")
+logo_label = tk.Label(header_frame, image=logo_image)
+logo_label.pack(side="left", padx=10)
+
+# Create a navigation frame
+nav_frame = tk.Frame(main_frame, bg="gray")
+nav_frame.pack(fill="x")
+
+# Add navigation buttons
+nav_buttons = [
+    {"text": "Home", "command": lambda: show_home_page()},
+    {"text": "Expenses", "command": lambda: show_expenses_page()},
+    {"text": "Budget", "command": lambda: show_budget_page()},
+    {"text": "Reports", "command": lambda: show_reports_page()},
+    {"text": "Logout", "command": lambda: logout()}
+]
+for button in nav_buttons:
+    btn = tk.Button(nav_frame, text=button["text"], command=button["command"])
+    btn.pack(side="left", padx=10)
+
+# Create a content frame
+content_frame = tk.Frame(main_frame, bg="white")
+content_frame.pack(fill="both", expand=True)
+
+# Define functions for each page
+def show_home_page():
+    # Clear the content frame
+    for widget in content_frame.winfo_children():
+        widget.destroy()
+
+    # Add a welcome message
+    welcome_label = tk.Label(content_frame, text="Welcome to Expense Tracker!")
+    welcome_label.pack(pady=20)
+
+def show_expenses_page():
+    # Clear the content frame
+    for widget in content_frame.winfo_children():
+        widget.destroy()
+
+    # Add a form to enter expenses
+    expense_form = tk.Frame(content_frame)
+    expense_form.pack(pady=20)
+
+    tk.Label(expense_form, text="Enter Expense:").pack()
+    expense_entry = tk.Entry(expense_form)
+    expense_entry.pack()
+
+    tk.Label(expense_form, text="Select Category:").pack()
+    category_var = tk.StringVar()
+    category_menu = tk.OptionMenu(expense_form, category_var, *get_categories())
+    category_menu.pack()
+
+    tk.Button(expense_form, text="Add Expense", command=lambda: add_expense(expense_entry.get(), category_var.get())).pack()
+
+def show_budget_page():
+    # Clear the content frame
+    for widget in content_frame.winfo_children():
+        widget.destroy()
+
+    # Add a form to set budget
+    budget_form = tk.Frame(content_frame)
+    budget_form.pack(pady=20)
+
+    tk.Label(budget_form, text="Select Category:").pack()
+    category_var = tk.StringVar()
+    category_menu = tk.OptionMenu(budget_form, category_var, *get_categories())
+    category_menu.pack()
+
+    tk.Label(budget_form, text="Enter Budget:").pack()
+    budget_entry = tk.Entry(budget_form)
+    budget_entry.pack()
+
+    tk.Button(budget_form, text="Set Budget", command=lambda: set_budget(category_var.get(), budget_entry.get())).pack()
+
+def show_reports_page():
+    # Clear the content frame
+    for widget in content_frame.winfo_children():
+        widget.destroy()
+
+    # Add a report table
+    report_table = tk.Frame(content_frame)
+    report_table.pack(pady=20)
+
+    tk.Label(report_table, text="Category").grid(row=0, column=0)
+    tk.Label(report_table, text="Expenses").grid(row=0, column=1)
+    tk.Label(report_table, text="Budget").grid(row=0, column=2)
+
+    for row, (category, expenses, budget) in enumerate(get_reports()):
+        tk.Label(report_table, text=category).grid(row=row+1, column=0)
+        tk.Label(report_table, text=expenses).grid(row=row+1, column=1)
+        tk.Label(report_table, text=budget).grid(row=row+1, column=2)
+
+    # Add a button to visualize data
+    tk.Button(report_table, text="Visualize Data", command=lambda: visualize_data()).pack()
